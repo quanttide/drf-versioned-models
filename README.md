@@ -1,9 +1,18 @@
-# Django Package Template
+# `drf-versioned-models`
+
+Versioned models for Django REST Framework.
+
+## Installation
+
+```shell
+pip install drf-versioned-models -i 
+```
 
 ## Usage
 
-After create the Django project by Coding depot, please edit:
+```python
 
+```
 
 ## License
 

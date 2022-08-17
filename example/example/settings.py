@@ -36,9 +36,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # community packages
     'rest_framework',
-    # internal apps
-    'drf_admin',
+    # user packages
     'courses',
+    'products',
 ]
 
 MIDDLEWARE = [
