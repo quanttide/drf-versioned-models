@@ -15,21 +15,12 @@ class VersionedModelSerializer(serializers.ModelSerializer):
       - `ModelVersion`的`created_at`作为`Model`的`updated_at`字段
       - `ModelVersion`的其他字段作为`Model`字段
     """
-    class Meta:
-        # TODO: 自动查找关联关系
-        model_version = None
-        model_related_field = None
 
     def __init__(self, *args, **kwargs):
-        self.validate_meta()
+        # 设置默认Meta
+        if not hasattr(self.Meta, 'model_version_related_name'):
+            self.Meta.model_version_related_name = 'versions'
         super().__init__(*args, **kwargs)
-
-    def validate_meta(self):
-        # 验证Meta
-        if not self.Meta.model_version:
-            raise ValueError("请在Meta里设置model_version字段")
-        if not self.Meta.model_related_field:
-            raise ValueError("请在Meta里设置model_related_field字段")
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -50,11 +41,19 @@ class VersionedModelSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def filter_allowed_fields(model, validated_data):
+        """
+        脚手架
+        :param model:
+        :param validated_data:
+        :return:
+        """
         allowed_fields = [field.name for field in model._meta.get_fields()]
         return {key: value for key, value in validated_data.items() if key in allowed_fields}
 
     def create_version(self, instance, validated_data):
-        pass
+        # https://docs.djangoproject.com/en/4.1/ref/models/relations/
+        getattr(instance, self.Meta.model_version_related_name).create(**validated_data)
+        return instance
 
     def create(self, validated_data):
         model = self.Meta.model
@@ -63,8 +62,7 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         instance = model.objects.create(**self.filter_allowed_fields(model, validated_data))
         # 创建新模型版本
         model_version_validated_data = self.filter_allowed_fields(model_version, validated_data)
-        model_version_validated_data.update({self.Meta.model_related_field: instance})
-        model_version.objects.create(**model_version_validated_data)
+        instance = self.create_version(instance, model_version_validated_data)
         return instance
 
     def update(self, instance, validated_data):
@@ -80,6 +78,5 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         model_version = self.Meta.model_version
         # 创建新模型版本
         model_version_validated_data = self.filter_allowed_fields(model_version, validated_data)
-        model_version_validated_data.update({self.Meta.model_related_field: instance})
-        model_version.objects.create(**model_version_validated_data)
+        instance = self.create_version(instance, model_version_validated_data)
         return instance

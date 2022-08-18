@@ -8,14 +8,14 @@ from django.db import models
 
 # ----- Versioned models -----
 
-class VersionedModel(models.Model):
+class ExampleModel(models.Model):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='ID')
     name = models.CharField(max_length=128, unique=True, verbose_name='名称')
 
 
-class VersionedModelVersion(models.Model):
+class ExampleModelVersion(models.Model):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='版本ID')
-    model = models.ForeignKey(VersionedModel, related_name='versions', on_delete=models.CASCADE, verbose_name='数据模型')
+    model = models.ForeignKey(ExampleModel, related_name='versions', on_delete=models.CASCADE, verbose_name='数据模型')
     title = models.CharField(max_length=128, verbose_name='标题')
 
 
@@ -41,7 +41,7 @@ class ChildModel(models.Model):
 class ChildModelVersion(models.Model):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='版本ID')
     parent = models.ForeignKey(ParentModelVersion, related_name='children', on_delete=models.CASCADE, verbose_name='父模型')
-    model = models.ForeignKey(VersionedModel, related_name='versions', on_delete=models.CASCADE, verbose_name='数据模型')
+    model = models.ForeignKey(ChildModel, related_name='versions', on_delete=models.CASCADE, verbose_name='数据模型')
     title = models.CharField(max_length=128, verbose_name='标题')
 
 
