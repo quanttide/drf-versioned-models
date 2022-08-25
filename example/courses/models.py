@@ -1,27 +1,28 @@
 import uuid
 
 from django.db import models
+from drf_versioned_models.models import VersionedModel, ModelVersion
 
 
-class Course(models.Model):
+class Course(VersionedModel):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='课程ID')
     name = models.CharField(max_length=128, unique=True, verbose_name='课程名称')
 
 
-class CourseVersion(models.Model):
+class CourseVersion(ModelVersion):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='课程版本ID')
     course = models.ForeignKey(Course, related_name='versions', on_delete=models.CASCADE, verbose_name='课程')
     title = models.CharField(max_length=128, verbose_name='课程名称')
 
 
-class Lecture(models.Model):
+class Lecture(VersionedModel):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='课时ID')
     name = models.CharField(max_length=128, unique=True, verbose_name='课时名称')
     course = models.ForeignKey(Course, related_name='lectures', on_delete=models.CASCADE, verbose_name='课程')
     created_at = models.DateTimeField(verbose_name='课时创建时间')
 
 
-class LectureVersion(models.Model):
+class LectureVersion(ModelVersion):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='课时版本ID')
     course_version = models.ForeignKey(CourseVersion, related_name='lecture_versions', on_delete=models.CASCADE, verbose_name='课程版本')
     lecture = models.ForeignKey(Lecture, related_name='versions', on_delete=models.CASCADE, verbose_name='课时')

@@ -4,18 +4,20 @@
 import uuid
 
 from django.db import models
+from drf_versioned_models.models import VersionedModel, ModelVersion
 
 
 # ----- Versioned models -----
 
-class ExampleModel(models.Model):
+class ExampleModel(VersionedModel):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='ID')
     name = models.CharField(max_length=128, unique=True, verbose_name='名称')
 
 
-class ExampleModelVersion(models.Model):
+class ExampleModelVersion(ModelVersion):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='版本ID')
     model = models.ForeignKey(ExampleModel, related_name='versions', on_delete=models.CASCADE, verbose_name='数据模型')
+    version = models.CharField(max_length=64, verbose_name='版本')
     title = models.CharField(max_length=128, verbose_name='标题')
 
 
