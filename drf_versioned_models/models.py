@@ -7,6 +7,8 @@ import uuid
 from django.db import models
 
 
+# ----- VersionedModel -----
+
 class VersionedModelManager(models.Manager):
     """
     重新定义版本管理模型的增查删改行为。
@@ -87,6 +89,8 @@ class VersionedModel(models.Model):
         super(VersionedModel, self).__init__(*args, **kwargs)
 
 
+# ----- ModelVersion -----
+
 class ModelVersionManager(models.Manager):
     def update(self):
         # TODO：临时写一下，后面优化。
@@ -119,3 +123,12 @@ class ModelVersion(models.Model):
     def __init__(self, *args, **kwargs):
         # TODO: 验证必填Meta
         super().__init__(*args, **kwargs)
+
+    def delete(self):
+        """
+        ref:
+          - https://docs.djangoproject.com/zh-hans/4.1/ref/models/instances/#deleting-objects
+        :return:
+        """
+        self.is_active = False
+        self.save()

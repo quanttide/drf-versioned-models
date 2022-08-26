@@ -35,6 +35,18 @@ class VersionedModelTestCase(TestCase):
         self.assertFalse(model_instance.is_active)
 
 
+class ModelVersionManagerTestCase(TestCase):
+    model_class = ExampleModelVersion
+    fixtures = ['examples.json']
+
+    def test_delete(self):
+        self.model_class.objects.filter(version='0.1.0').delete()
+        model_instance = self.model_class.objects.get(version='0.1.0')
+        # 似乎被真的删了，没发挥作用。
+        # 这个还是原来的实例。
+        self.assertFalse(model_instance.is_active)
+
+
 class ModelVersionTestCase(TestCase):
     model_class = ExampleModelVersion
     fixtures = ['examples.json']
