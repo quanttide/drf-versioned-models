@@ -6,19 +6,25 @@ from tests.serializers import ExampleModelSerializer
 
 class VersionedModelSerializerTestCase(TestCase):
     serializer_class = ExampleModelSerializer
+    fixtures = ['examples.json']
 
     def setUp(self):
-        self.instance = ExampleModel.objects.create(name='test-instance')
-        self.instance.versions.create(title='测试')
-        self.new_data = {'name': 'test-name', 'title': '测试标题'}
+        self.instance = ExampleModel.objects.get(name='data-analytics-with-python')
+        self.serialized_data = {
+            'id': "61741d93-8db4-4845-83c9-7e625e445983",
+            'name': 'data-analytics-with-python',
+            'version': '0.1.0',
+            "title": "Python数据分析"
+        }
+        self.new_data = {'name': 'test-name', 'title': '测试标题', 'version': '0.1.0'}
 
     def test_to_representation(self):
-        data = self.serializer_class.to_representation(self.instance)
-        # TODO：查dict的单测验证语法
+        data = self.serializer_class().to_representation(self.instance)
+        self.assertDictEqual(self.serialized_data, data)
 
     def test_serialization(self):
         serializer = self.serializer_class(self.instance)
-        self.assertTrue(serializer.data)
+        self.assertDictEqual(self.serialized_data, serializer.data)
 
     def test_to_interval_value(self):
         expected_data = {'name': 'test-name', 'versions': [{'title': '测试标题'}]}

@@ -16,31 +16,17 @@ class VersionedModelSerializer(serializers.ModelSerializer):
       - `ModelVersion`的其他字段作为`Model`字段
     """
 
-    def __init__(self, *args, **kwargs):
-        # 设置默认Meta
-        if not hasattr(self.Meta, 'model_version_related_name'):
-            self.Meta.model_version_related_name = 'versions'
-        super().__init__(*args, **kwargs)
+    class VersionMeta:
+        version_serializer = None
 
     def to_representation(self, instance):
         """
-        TODO:
-          - 允许直接访问ModelVersion的Field。比如`course.title`代替`courses.versions.latest('version').title`。
-
         :param instance:
         :return:
         """
+        instance_latest_version = instance.versions.latest('version')
         ret = super().to_representation(instance)
-        # 多个版本被序列化时，选取最新版本
-        latest_version = ret.pop('versions')[-1]
-        # 数据模型版本字段移到数据模型
-        for key in latest_version:
-            if key == 'created_at':
-                # 版本发布时间作为数据模型更新时间
-                ret['updated_at'] = latest_version[key]
-            else:
-                # 版本信息作为数据模型信息
-                ret[key] = latest_version[key]
+        ret.update(self.VersionMeta.version_serializer().to_representation(instance_latest_version))
         return ret
 
     def to_interval_value(self, data):
@@ -77,6 +63,7 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         更新模型定义为：
           - 使用现有模型不可变字段；
           - 创建模型版本及可变字段。
+
         :param instance:
         :param validated_data:
         :return:
