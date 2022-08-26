@@ -23,6 +23,13 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
 
     def to_representation(self, instance):
+        """
+        TODO:
+          - 允许直接访问ModelVersion的Field。比如`course.title`代替`courses.versions.latest('version').title`。
+
+        :param instance:
+        :return:
+        """
         ret = super().to_representation(instance)
         # 多个版本被序列化时，选取最新版本
         latest_version = ret.pop('versions')[-1]

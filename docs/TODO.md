@@ -2,6 +2,8 @@
 
 ## 内部需求
 
+允许直接访问ModelVersion的Field。比如`course.title`代替`courses.versions.latest('version').title`。
+
 [自定义VersionMeta标记](tutorials/custom_version_meta.md)。支付服务的Price表需要自定义`related_name`为`prices`。
 
 ## 外部需求

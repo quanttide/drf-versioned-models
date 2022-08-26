@@ -19,6 +19,7 @@ class VersionedModelManager(models.Manager):
     def get(self, *args, **kwargs):
         """
         "获取"行为定义为获取模型主体和**可用**最新版本。
+
         :param args:
         :param kwargs:
         :return:
@@ -55,13 +56,6 @@ class VersionedModelManager(models.Manager):
         model_instance.versions.create(**kwargs)
         return super().update(**kwargs)
 
-    def delete(self):
-        """
-        "删除"行为定义为`is_active`标记为`False`。
-        :return:
-        """
-        return super().update(is_active=False)
-
 
 class VersionedModel(models.Model):
     """
@@ -70,6 +64,10 @@ class VersionedModel(models.Model):
     >>>
     >>> class MyModelVersion(models.Model):
     >>>     model = models.ForeignKey(MyVersionedModel, related_name='versions', on_delete=models.CASCADE, verbose_name='数据模型')
+
+    TODO:
+      - 允许直接访问ModelVersion的Field。
+        比如`course.title`代替`courses.versions.latest('version').title`。
     """
     is_active = models.BooleanField(default=True, verbose_name='是否可用')
 
@@ -82,11 +80,25 @@ class VersionedModel(models.Model):
         # TODO: 预留着，后面再用起来
         version_related_names = ('versions',)
 
-    objects = VersionedModelManager()
+    # objects = VersionedModelManager()
 
     def __init__(self, *args, **kwargs):
         # TODO: 验证必填Meta
         super(VersionedModel, self).__init__(*args, **kwargs)
+
+    def delete(self) -> None:
+        """
+        "删除"行为定义为`is_active`标记为`False`。
+
+        ref:
+          - https://docs.djangoproject.com/zh-hans/4.1/ref/models/instances/#deleting-objects
+          - https://docs.djangoproject.com/zh-hans/4.1/topics/db/queries/#deleting-objects
+          - https://docs.djangoproject.com/zh-hans/4.1/topics/db/models/#overriding-predefined-model-methods
+
+        TODO: 返回值未设计
+        """
+        self.is_active = False
+        self.save()
 
 
 # ----- ModelVersion -----
@@ -95,12 +107,6 @@ class ModelVersionManager(models.Manager):
     def update(self):
         # TODO：临时写一下，后面优化。
         raise Exception('禁用')
-
-    def delete(self):
-        """
-        "删除"行为定义为`is_active`标记为`False`。
-        """
-        return super().update(is_active=False)
 
 
 class ModelVersion(models.Model):
@@ -118,17 +124,21 @@ class ModelVersion(models.Model):
         # TODO：一组字段构成的版本号。暂不实现主要是考虑RESTful API不好定义。
         version_fields = ('version', )
 
-    objects = ModelVersionManager()
+    # objects = ModelVersionManager()
 
     def __init__(self, *args, **kwargs):
         # TODO: 验证必填Meta
         super().__init__(*args, **kwargs)
 
-    def delete(self):
+    def delete(self) -> None:
         """
+        "删除"行为定义为`is_active`标记为`False`。
+
         ref:
           - https://docs.djangoproject.com/zh-hans/4.1/ref/models/instances/#deleting-objects
-        :return:
+          - https://docs.djangoproject.com/zh-hans/4.1/topics/db/queries/#deleting-objects
+
+        TODO: 返回值未设计
         """
         self.is_active = False
         self.save()
