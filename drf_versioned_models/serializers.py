@@ -21,14 +21,23 @@ class VersionedModelSerializer(serializers.ModelSerializer):
     """
 
     class VersionMeta:
+        # 仅做样例，实际上不会被直接继承
         version_serializer = None
+        version_field = 'version'
+        version_related_name = 'versions'
         version_field_mapping = {}
 
-    def _validate_duplicate_fields(self, data, version_data):
-        duplicated_fields = set(data.keys()) & set(version_data.keys())
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # 版本字段冲突抛出异常，让开发者自己处理
+        self._validate_duplicate_fields()
+
+    def _validate_duplicate_fields(self):
+        model_fields = self.get_fields().keys()
+        model_version_fields = self.VersionMeta.version_serializer().get_fields().keys()
+        duplicated_fields = set(model_fields) & set(model_version_fields)
         if duplicated_fields:
-            raise serializers.ValidationError("")
-        return data, version_data
+            raise serializers.ValidationError("未处理重复字段")
 
     def _replace_version_field(self, data):
         version_field_mapping = self.VersionMeta.version_field_mapping
@@ -42,58 +51,41 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         :param instance:
         :return:
         """
-        instance_latest_version = instance.versions.latest('version')
+        instance_latest_version = instance.versions.latest(self.VersionMeta.version_field)
         ret = super().to_representation(instance)
         ret_version = self.VersionMeta.version_serializer().to_representation(instance_latest_version)
-        # 版本字段冲突抛出异常，让开发者自己处理
-        ret, ret_version = self._validate_duplicate_fields(ret, ret_version)
         # 处理版本字段名称更变，比如版本`created_at`改为`updated_at`
         ret_version = self._replace_version_field(ret_version)
         ret.update(ret_version)
         return ret
 
-    def to_interval_value(self, data):
-        return super().to_interval_value(data)
-
-    @staticmethod
-    def filter_allowed_fields(model, validated_data):
-        """
-        脚手架
-        :param model:
-        :param validated_data:
-        :return:
-        """
-        allowed_fields = [field.name for field in model._meta.get_fields()]
-        return {key: value for key, value in validated_data.items() if key in allowed_fields}
-
-    def create_version(self, instance, validated_data):
-        # https://docs.djangoproject.com/en/4.1/ref/models/relations/
-        getattr(instance, self.Meta.model_version_related_name).create(**validated_data)
-        return instance
+    def to_internal_value(self, data):
+        data[self.VersionMeta.version_related_name] = self.initial_data[self.VersionMeta.version_related_name]
+        return data
 
     def create(self, validated_data):
-        model = self.Meta.model
-        model_version = self.Meta.model_version
+        # 取出版本数据
+        version_validated_data_list = validated_data.pop(self.VersionMeta.version_related_name)
         # 创建新模型
-        instance = model.objects.create(**self.filter_allowed_fields(model, validated_data))
+        instance = self.Meta.model.objects.create(**validated_data)
         # 创建新模型版本
-        model_version_validated_data = self.filter_allowed_fields(model_version, validated_data)
-        instance = self.create_version(instance, model_version_validated_data)
+        for version_validated_data in version_validated_data_list:
+            getattr(instance, self.VersionMeta.version_related_name).create(**version_validated_data)
         return instance
 
     def update(self, instance, validated_data):
         """
         更新模型定义为：
-          - 使用现有模型不可变字段；
-          - 创建模型版本及可变字段。
+          - 使用现有模型不可变字段（TODO：验证模型不变，具体异常方式待定义）
+          - 创建模型版本及可变字段
 
         :param instance:
         :param validated_data:
         :return:
         """
-        model = self.Meta.model
-        model_version = self.Meta.model_version
+        # 取出版本数据
+        version_validated_data_list = validated_data.pop(self.VersionMeta.version_related_name)
         # 创建新模型版本
-        model_version_validated_data = self.filter_allowed_fields(model_version, validated_data)
-        instance = self.create_version(instance, model_version_validated_data)
+        for version_validated_data in version_validated_data_list:
+            getattr(instance, self.VersionMeta.version_related_name).create(**version_validated_data)
         return instance

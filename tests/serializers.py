@@ -12,11 +12,12 @@ class ExampleModelVersionSerializer(serializers.ModelSerializer):
 
 
 class ExampleModelSerializer(VersionedModelSerializer):
-
     class Meta:
         model = ExampleModel
         exclude = ['is_active']
 
     class VersionMeta:
         version_serializer = ExampleModelVersionSerializer
+        version_field = 'version'
+        version_related_name = 'versions'
         version_field_mapping = {'created_at': 'updated_at'}

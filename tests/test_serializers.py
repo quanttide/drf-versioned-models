@@ -17,7 +17,26 @@ class VersionedModelSerializerTestCase(TestCase):
             "title": "Python数据分析",
             "updated_at": '2022-05-23T00:00:00'
         }
-        self.new_data = {'name': 'test-name', 'title': '测试标题', 'version': '0.1.0'}
+        self.new_data = {
+            'name': 'test-name',
+            'versions': [
+                {
+                    'title': '测试标题',
+                    'version': '0.1.0',
+                    'created_at': '2022-05-24T00:00:00',
+                }
+            ]
+        }
+        self.new_version_data = {
+            'name': 'data-analytics-with-python',
+            'versions': [
+                {
+                    'title': '测试标题2',
+                    'version': '0.2.0',
+                    'created_at': "2022-05-25T00:00:00",
+                }
+            ]
+        }
 
     def test_to_representation(self):
         data = self.serializer_class().to_representation(self.instance)
@@ -25,12 +44,7 @@ class VersionedModelSerializerTestCase(TestCase):
 
     def test_serialization(self):
         serializer = self.serializer_class(self.instance)
-        self.assertDictEqual(self.serialized_data, serializer.data)
-
-    def test_to_interval_value(self):
-        expected_data = {'name': 'test-name', 'versions': [{'title': '测试标题'}]}
-        processed_data = self.serializer_class.to_interval_value(self.new_data)
-        # TODO：查dict的单测验证语法
+        self.assertDictEqual(self.serialized_data, dict(serializer.data))
 
     def test_validate(self):
         serializer = self.serializer_class(self.instance, data=self.new_data)
@@ -41,10 +55,10 @@ class VersionedModelSerializerTestCase(TestCase):
         self.assertTrue(serializer.is_valid(raise_exception=True))
         serializer.save()
         self.assertTrue(ExampleModel.objects.get(name=self.new_data['name']))
-        self.assertTrue(ExampleModelVersion.objects.filter(title=self.new_data['title']).exists())
+        self.assertTrue(ExampleModelVersion.objects.filter(title=self.new_data['versions'][0]['title']).exists())
 
     def test_update(self):
-        serializer = self.serializer_class(self.instance, data=self.new_data)
+        serializer = self.serializer_class(self.instance, data=self.new_version_data)
         self.assertTrue(serializer.is_valid(raise_exception=True))
         serializer.save()
-        self.assertTrue(ExampleModelVersion.objects.filter(title=self.new_data['title']).exists())
+        self.assertTrue(ExampleModelVersion.objects.filter(title=self.new_version_data['versions'][0]['title']).exists())
