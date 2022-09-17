@@ -19,3 +19,4 @@ class ExampleModelSerializer(VersionedModelSerializer):
 
     class VersionMeta:
         version_serializer = ExampleModelVersionSerializer
+        version_field_mapping = {'created_at': 'updated_at'}

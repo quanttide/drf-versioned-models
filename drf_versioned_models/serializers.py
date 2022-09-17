@@ -10,14 +10,32 @@ class VersionedModelSerializer(serializers.ModelSerializer):
     假设被序列化的模型由`Model`和`ModelVersion`的最新版本组成。
     其中`Model`定义不可变字段，`ModelVersion`定义可变字段。
 
-    并且：
-      - 关联命名为`versions`
-      - `ModelVersion`的`created_at`作为`Model`的`updated_at`字段
-      - `ModelVersion`的其他字段作为`Model`字段
+    ```python
+    class CourseSerializer(VersionedModelSerializer):
+        class VersionMeta:
+            version_serializer = CourseVersionSerializer
+            version_field_mapping = {
+                'created_at': 'updated_at'
+            }
+    ```
     """
 
     class VersionMeta:
         version_serializer = None
+        version_field_mapping = {}
+
+    def _validate_duplicate_fields(self, data, version_data):
+        duplicated_fields = set(data.keys()) & set(version_data.keys())
+        if duplicated_fields:
+            raise serializers.ValidationError("")
+        return data, version_data
+
+    def _replace_version_field(self, data):
+        version_field_mapping = self.VersionMeta.version_field_mapping
+        for key in data:
+            if key in version_field_mapping:
+                data[version_field_mapping[key]] = data.pop(key)
+        return data
 
     def to_representation(self, instance):
         """
@@ -26,7 +44,12 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         """
         instance_latest_version = instance.versions.latest('version')
         ret = super().to_representation(instance)
-        ret.update(self.VersionMeta.version_serializer().to_representation(instance_latest_version))
+        ret_version = self.VersionMeta.version_serializer().to_representation(instance_latest_version)
+        # 版本字段冲突抛出异常，让开发者自己处理
+        ret, ret_version = self._validate_duplicate_fields(ret, ret_version)
+        # 处理版本字段名称更变，比如版本`created_at`改为`updated_at`
+        ret_version = self._replace_version_field(ret_version)
+        ret.update(ret_version)
         return ret
 
     def to_interval_value(self, data):

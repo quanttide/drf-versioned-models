@@ -19,6 +19,7 @@ class ExampleModelVersion(ModelVersion):
     model = models.ForeignKey(ExampleModel, related_name='versions', on_delete=models.CASCADE, verbose_name='数据模型')
     version = models.CharField(max_length=64, verbose_name='版本')
     title = models.CharField(max_length=128, verbose_name='标题')
+    created_at = models.DateTimeField(verbose_name='版本创建时间')
 
 
 # ----- Nested versioned models -----

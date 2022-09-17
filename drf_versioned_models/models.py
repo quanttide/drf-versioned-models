@@ -98,7 +98,7 @@ class VersionedModel(models.Model):
         TODO: 返回值未设计
         """
         self.is_active = False
-        self.save()
+        super().save()
 
 
 # ----- ModelVersion -----
@@ -141,4 +141,4 @@ class ModelVersion(models.Model):
         TODO: 返回值未设计
         """
         self.is_active = False
-        self.save()
+        super().save()
