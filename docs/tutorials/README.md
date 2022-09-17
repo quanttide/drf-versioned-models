@@ -1,10 +1,32 @@
 # 用户文档
 
+## 目标API
+
+### 模型API
+
+`/{model_class}s/{lookup_field}/`
+
+- `GET`: 获取最新版本的单个或者列表。
+- `POST`: 创建模型及版本。
+- `PUT`/`PATCH`: 创建新版本，内部逻辑是拉取上一个版本并拼接。
+- `DELETE`: "删除"模型，实际上是标记`is_active=False`。
+
+### 模型版本API
+
+`/<model_class>s/{lookup_field}/<version_related_name>/{version}`
+
+- `GET`: 获取全部版本，或者根据版本号字段某个版本。
+- `POST`: 创建版本。
+- `DELETE`: "删除"版本，实际上是标记`is_active=False`。
+- `PUT`和`PATCH`不支持。
+
 ## 定义模型类
 
 把计划版本管理的模型分为不可变部分和可变部分，其中：
 - 不可变部分继承`VersionedModel`类。
 - 可变部分继承`ModelVersion`类，关联上述模型的字段的`related_name`设置成`versions`。
+
+`ModelVersion`和`VersionedModel`增加了`is_active`字段，并把`delete`定义为标记`is_active=False`。
 
 ```python
 # models.py
@@ -61,22 +83,14 @@ class ExampleModelSerializer(VersionedModelSerializer):
         version_field_mapping = {'created_at': 'updated_at'}
 ```
 
-## 定义API
+## 定义视图类
 
-### 模型API
+```python
 
-`/{model_class}s/{lookup_field}/`
+```
 
-- `GET`: 获取最新版本的单个或者列表。
-- `POST`: 创建模型及版本。
-- `PUT`/`PATCH`: 创建新版本，内部逻辑是拉取上一个版本并拼接。
-- `DELETE`: "删除"模型，实际上是标记`is_active=False`。
+## 定义路由类
 
-### 模型版本API
+```python
 
-`/<model_class>s/{lookup_field}/<version_related_name>/{version}`
-
-- `GET`: 获取全部版本，或者根据版本号字段某个版本。
-- `POST`: 创建版本。
-- `DELETE`: "删除"版本，实际上是标记`is_active=False`。
-- `PUT`和`PATCH`不支持。
+```
