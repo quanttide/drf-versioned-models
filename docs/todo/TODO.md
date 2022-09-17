@@ -6,11 +6,9 @@
 
 定义QuerySet的delete方法。不知道怎么关联到Manager。
 
-[自定义VersionMeta标记](tutorials/custom_version_meta.md)。支付服务的Price表需要自定义`related_name`为`prices`。
-
 ## 外部需求
 
-[自定义`is_active`标记](tutorials/custom_is_active_field.md)。
+[自定义`is_active`标记](custom_is_active_field.md)。
 
 ## 不确定
 
