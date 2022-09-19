@@ -14,6 +14,8 @@ class VersionedModelSerializer(serializers.ModelSerializer):
     class CourseSerializer(VersionedModelSerializer):
         class VersionMeta:
             version_serializer = CourseVersionSerializer
+            version_field = 'version'
+            version_related_name = 'versions'
             version_field_mapping = {
                 'created_at': 'updated_at'
             }

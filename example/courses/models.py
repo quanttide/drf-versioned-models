@@ -10,9 +10,11 @@ class Course(VersionedModel):
 
 
 class CourseVersion(ModelVersion):
-    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='课程版本ID')
-    course = models.ForeignKey(Course, related_name='versions', on_delete=models.CASCADE, verbose_name='课程')
-    title = models.CharField(max_length=128, verbose_name='课程名称')
+    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='版本ID')
+    course = models.ForeignKey(Course, related_name='versions', on_delete=models.CASCADE, verbose_name='数据模型')
+    version = models.CharField(max_length=64, verbose_name='版本')
+    title = models.CharField(max_length=128, verbose_name='标题')
+    created_at = models.DateTimeField(verbose_name='版本创建时间')
 
 
 class Lecture(VersionedModel):

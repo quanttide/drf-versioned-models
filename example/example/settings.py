@@ -122,5 +122,8 @@ STATIC_URL = '/static/'
 # ----- Django REST Framework ----
 
 REST_FRAMEWORK = {
-    'UNAUTHENTICATED_USER': None
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny"
+    ],
+    'UNAUTHENTICATED_USER': None,
 }

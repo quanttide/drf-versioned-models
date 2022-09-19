@@ -1,18 +1,19 @@
 from django.urls import path, include
 
-from rest_framework.routers import SimpleRouter
+from rest_framework_nested.routers import SimpleRouter
 from drf_versioned_models.routers import ModelVersionSimpleRouter
 
-from .views import CourseViewSet, CourseVersionViewSet
+from .views import ExampleModelViewSet, ExampleModelVersionSerializer
 
 
-app_name = 'courses'
+app_name = 'tests'
+
 
 router = SimpleRouter()
-router.register(r'courses', CourseViewSet)
+router.register(r'examples', ExampleModelViewSet)
 
 # version_router = ModelVersionSimpleRouter(router, r'courses', lookup='course')
-# version_router.register(r'versions', CourseVersionViewSet, basename='versions')
+# version_router.register(r'versions', ExampleModelVersionSerializer, basename='versions')
 
 urlpatterns = [
     path(r'', include(router.urls)),

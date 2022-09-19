@@ -17,6 +17,7 @@ Including another URLconf
 
 from django.urls import path, include
 
-urlpatterns = [
 
+urlpatterns = [
+    path('', include("courses.urls")),
 ]

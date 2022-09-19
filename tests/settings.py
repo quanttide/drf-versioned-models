@@ -16,3 +16,5 @@ DATABASES = {
         "ENGINE": "django.db.backends.sqlite3"
     }
 }
+
+ROOT_URLCONF = "tests.urls"
