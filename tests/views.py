@@ -1,6 +1,6 @@
-from drf_versioned_models.viewsets import VersionedModelViewSet, ModelVersionViewSet
+from drf_versioned_models.viewsets import VersionedModelViewSet
 
-from .models import ExampleModel, ExampleModelVersion
+from .models import ExampleModel
 from .serializers import ExampleModelSerializer
 
 

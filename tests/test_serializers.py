@@ -42,6 +42,11 @@ class VersionedModelSerializerTestCase(TestCase):
             'version': '0.2.0',
             'updated_at': "2022-05-25T00:00:00",
         }
+        self.new_version_partial_data = {
+            'name': 'data-analytics-with-python',
+            'version': '0.2.1',
+            'updated_at': "2022-05-26T00:00:00",
+        }
 
     def test_to_representation(self):
         data = self.serializer_class().to_representation(self.instance)
@@ -64,10 +69,17 @@ class VersionedModelSerializerTestCase(TestCase):
         self.assertTrue(serializer.is_valid(raise_exception=True))
         serializer.save()
         self.assertTrue(ExampleModel.objects.get(name=self.new_data['name']))
-        self.assertTrue(ExampleModelVersion.objects.filter(title=self.new_data['title']).exists())
+        self.assertTrue(ExampleModelVersion.objects.filter(version=self.new_data['version']).exists())
 
     def test_update(self):
         serializer = self.serializer_class(self.instance, data=self.new_version_data)
         self.assertTrue(serializer.is_valid(raise_exception=True))
         serializer.save()
-        self.assertTrue(ExampleModelVersion.objects.filter(title=self.new_version_data['title']).exists())
+        self.assertTrue(ExampleModelVersion.objects.filter(version=self.new_version_data['version']).exists())
+
+    def test_partial_update(self):
+        serializer = self.serializer_class(self.instance, data=self.new_version_partial_data, partial=True)
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+        serializer.save()
+        version_instance = ExampleModelVersion.objects.get(version=self.new_version_partial_data['version'])
+        self.assertEqual(version_instance.title, 'Python数据分析')

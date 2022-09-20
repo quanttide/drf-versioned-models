@@ -3,7 +3,7 @@ from django.urls import path, include
 from rest_framework.routers import SimpleRouter
 from drf_versioned_models.routers import ModelVersionSimpleRouter
 
-from .views import CourseViewSet, CourseVersionViewSet
+from .views import CourseViewSet
 
 
 app_name = 'courses'

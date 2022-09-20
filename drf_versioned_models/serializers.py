@@ -27,7 +27,7 @@ class VersionedModelSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # 常用Meta设置
+        # -- 常用Meta设置 --
         self._model_class = self.Meta.model
         self._model_class_name = self._model_class.__name__
         # -- 版本相关Meta设置 --
@@ -46,6 +46,9 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         # -- 验证 --
         # 版本字段冲突抛出异常，让开发者自己处理
         self._validate_duplicate_fields()
+        # partial_update定义为上个版本基础上update字段以后更新
+        if self.partial:
+            self.initial_data = self._get_partial_update_initial_data(self.initial_data)
 
     def _validate_version_field_mapping(self, version_field_mapping):
         """
@@ -74,9 +77,14 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         if duplicated_fields:
             raise serializers.ValidationError("未处理重复字段")
 
+    def _get_partial_update_initial_data(self, initial_data: dict) -> dict:
+        data = self.to_representation(self.instance)
+        data.update(initial_data)
+        return data
+
     # ----- 序列化 -----
 
-    def to_representation(self, instance):
+    def to_representation(self, instance) -> dict:
         """
         :param instance:
         :return:
