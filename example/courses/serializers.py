@@ -1,4 +1,5 @@
 from rest_framework.serializers import ModelSerializer
+from drf_versioned_models.serializers import VersionedModelSerializer
 
 from .models import Course, CourseVersion
 
@@ -9,7 +10,7 @@ class CourseVersionSerializer(ModelSerializer):
         exclude = ['id', 'course', 'is_active']
 
 
-class CourseSerializer(ModelSerializer):
+class CourseSerializer(VersionedModelSerializer):
     class Meta:
         model = Course
         exclude = ['is_active']

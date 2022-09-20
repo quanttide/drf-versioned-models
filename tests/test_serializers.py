@@ -1,3 +1,6 @@
+from collections import OrderedDict
+from datetime import datetime
+
 from django.test import TestCase
 
 from tests.models import ExampleModel, ExampleModelVersion
@@ -19,23 +22,25 @@ class VersionedModelSerializerTestCase(TestCase):
         }
         self.new_data = {
             'name': 'test-name',
-            'versions': [
-                {
-                    'title': '测试标题',
-                    'version': '0.1.0',
-                    'created_at': '2022-05-24T00:00:00',
-                }
-            ]
+            'title': '测试标题',
+            'version': '0.1.0',
+            'updated_at': '2022-05-24T00:00:00',
         }
+        self.deserialized_data = OrderedDict({
+            'name': 'test-name',
+            'versions': [
+                OrderedDict({
+                    'version': '0.1.0',
+                    'title': '测试标题',
+                    'created_at': datetime.fromisoformat('2022-05-24T00:00:00')
+                })
+            ]
+        })
         self.new_version_data = {
             'name': 'data-analytics-with-python',
-            'versions': [
-                {
-                    'title': '测试标题2',
-                    'version': '0.2.0',
-                    'created_at': "2022-05-25T00:00:00",
-                }
-            ]
+            'title': '测试标题2',
+            'version': '0.2.0',
+            'updated_at': "2022-05-25T00:00:00",
         }
 
     def test_to_representation(self):
@@ -50,15 +55,19 @@ class VersionedModelSerializerTestCase(TestCase):
         serializer = self.serializer_class(self.instance, data=self.new_data)
         self.assertTrue(serializer.is_valid(raise_exception=True))
 
+    def test_to_interval_value(self):
+        data = self.serializer_class().to_internal_value(self.new_data)
+        self.assertDictEqual(self.deserialized_data, data)
+
     def test_create(self):
         serializer = self.serializer_class(data=self.new_data)
         self.assertTrue(serializer.is_valid(raise_exception=True))
         serializer.save()
         self.assertTrue(ExampleModel.objects.get(name=self.new_data['name']))
-        self.assertTrue(ExampleModelVersion.objects.filter(title=self.new_data['versions'][0]['title']).exists())
+        self.assertTrue(ExampleModelVersion.objects.filter(title=self.new_data['title']).exists())
 
     def test_update(self):
         serializer = self.serializer_class(self.instance, data=self.new_version_data)
         self.assertTrue(serializer.is_valid(raise_exception=True))
         serializer.save()
-        self.assertTrue(ExampleModelVersion.objects.filter(title=self.new_version_data['versions'][0]['title']).exists())
+        self.assertTrue(ExampleModelVersion.objects.filter(title=self.new_version_data['title']).exists())

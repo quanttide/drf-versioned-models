@@ -12,8 +12,9 @@ class VersionedModelSerializer(serializers.ModelSerializer):
 
     ```python
     class CourseSerializer(VersionedModelSerializer):
-        class VersionMeta:
-            version_serializer = CourseVersionSerializer
+        class Meta:
+            version_model = CourseVersion
+            version_model_fields_exclude = ['id', 'is_active', 'course']
             version_field = 'version'
             version_related_name = 'versions'
             version_field_mapping = {
@@ -22,57 +23,108 @@ class VersionedModelSerializer(serializers.ModelSerializer):
     ```
     """
 
-    class VersionMeta:
-        # 仅做样例，实际上不会被直接继承
-        version_serializer = None
-        version_field = 'version'
-        version_related_name = 'versions'
-        version_field_mapping = {}
+    # ----- 初始化 -----
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # 常用Meta设置
+        self._model_class = self.Meta.model
+        self._model_class_name = self._model_class.__name__
+        # -- 版本相关Meta设置 --
+        # 版本模型类
+        self._version_model_class = self.Meta.version_model
+        # 版本序列化字段
+        self._version_model_fields_exclude = getattr(self.Meta, 'version_model_fields_exclude', ['id', 'is_active'])
+        # 版本标记字段，默认为`version`
+        self._version_field = getattr(self.Meta, 'version_field', 'version')
+        # 版本关联字段，默认为`versions`
+        self._version_related_name = getattr(self.Meta, 'version_related_name', 'versions')
+        # 序列化行为版本字段匹配表，默认为空
+        self._version_field_mapping = self._validate_version_field_mapping(getattr(self.Meta, 'version_field_mapping', {}))
+        # 反序列行为版本字段匹配表，默认为空
+        self._version_field_mapping_reverse = {value: key for key, value in getattr(self.Meta, 'version_field_mapping', {}).items()}
+        # -- 验证 --
         # 版本字段冲突抛出异常，让开发者自己处理
         self._validate_duplicate_fields()
 
+    def _validate_version_field_mapping(self, version_field_mapping):
+        """
+        TODO: 待转字段必须存在
+        :param version_field_mapping:
+        :return:
+        """
+        return version_field_mapping
+
+    def get_default_version_serializer_class(self):
+        return type(f"{self._model_class_name}Serializer", (serializers.ModelSerializer, ), {
+            "Meta": type("Meta", (object,), {
+                "model": self._version_model_class,
+                "exclude": self._version_model_fields_exclude,
+            })
+        })
+
+    @property
+    def version_serializer_class(self):
+        return self.get_default_version_serializer_class()
+
     def _validate_duplicate_fields(self):
         model_fields = self.get_fields().keys()
-        model_version_fields = self.VersionMeta.version_serializer().get_fields().keys()
+        model_version_fields = self.version_serializer_class().get_fields().keys()
         duplicated_fields = set(model_fields) & set(model_version_fields)
         if duplicated_fields:
             raise serializers.ValidationError("未处理重复字段")
 
-    def _replace_version_field(self, data):
-        version_field_mapping = self.VersionMeta.version_field_mapping
-        for key in data:
-            if key in version_field_mapping:
-                data[version_field_mapping[key]] = data.pop(key)
-        return data
+    # ----- 序列化 -----
 
     def to_representation(self, instance):
         """
         :param instance:
         :return:
         """
-        instance_latest_version = instance.versions.latest(self.VersionMeta.version_field)
+        instance_latest_version = instance.versions.latest(self._version_field)
         ret = super().to_representation(instance)
-        ret_version = self.VersionMeta.version_serializer().to_representation(instance_latest_version)
+        ret_version = self.version_serializer_class().to_representation(instance_latest_version)
         # 处理版本字段名称更变，比如版本`created_at`改为`updated_at`
         ret_version = self._replace_version_field(ret_version)
         ret.update(ret_version)
         return ret
 
+    def _replace_version_field(self, data):
+        new_data = {}
+        for key in data:
+            if key in self._version_field_mapping:
+                new_data[self._version_field_mapping[key]] = data[key]
+            else:
+                new_data[key] = data[key]
+        return new_data
+
+    # ----- 反序列化 -----
+
     def to_internal_value(self, data):
-        data[self.VersionMeta.version_related_name] = self.initial_data[self.VersionMeta.version_related_name]
-        return data
+        # 主模型
+        model_data = super().to_internal_value(data)
+        # 版本模型
+        version_data = self._filter_version_data(data, model_data)
+        version_data = self.version_serializer_class().to_internal_value(version_data)
+        model_data[self._version_related_name] = [version_data]
+        return model_data
+
+    def _filter_version_data(self, data, model_data):
+        version_data = {}
+        for key in data:
+            if key not in model_data:
+                if key in self._version_field_mapping_reverse:
+                    version_data[self._version_field_mapping_reverse[key]] = data[key]
+                else:
+                    version_data[key] = data[key]
+        return version_data
 
     def create(self, validated_data):
-        # 取出版本数据
-        version_validated_data_list = validated_data.pop(self.VersionMeta.version_related_name)
+        version_validated_data = validated_data.pop(self._version_related_name)[0]
         # 创建新模型
-        instance = self.Meta.model.objects.create(**validated_data)
+        instance = self._model_class.objects.create(**validated_data)
         # 创建新模型版本
-        for version_validated_data in version_validated_data_list:
-            getattr(instance, self.VersionMeta.version_related_name).create(**version_validated_data)
+        getattr(instance, self._version_related_name).create(**version_validated_data)
         return instance
 
     def update(self, instance, validated_data):
@@ -85,9 +137,7 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         :param validated_data:
         :return:
         """
-        # 取出版本数据
-        version_validated_data_list = validated_data.pop(self.VersionMeta.version_related_name)
         # 创建新模型版本
-        for version_validated_data in version_validated_data_list:
-            getattr(instance, self.VersionMeta.version_related_name).create(**version_validated_data)
+        version_validated_data = validated_data.pop(self._version_related_name)[0]
+        getattr(instance, self._version_related_name).create(**version_validated_data)
         return instance

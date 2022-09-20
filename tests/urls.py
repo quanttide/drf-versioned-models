@@ -3,7 +3,7 @@ from django.urls import path, include
 from rest_framework_nested.routers import SimpleRouter
 from drf_versioned_models.routers import ModelVersionSimpleRouter
 
-from .views import ExampleModelViewSet, ExampleModelVersionSerializer
+from .views import ExampleModelViewSet
 
 
 app_name = 'tests'
