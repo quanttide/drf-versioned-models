@@ -16,6 +16,9 @@ class CourseVersion(ModelVersion):
     title = models.CharField(max_length=128, verbose_name='标题')
     created_at = models.DateTimeField(verbose_name='版本创建时间')
 
+    class Meta:
+        unique_together = ['course', 'version']
+
 
 class Lecture(VersionedModel):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='课时ID')

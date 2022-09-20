@@ -21,6 +21,9 @@ class ExampleModelVersion(ModelVersion):
     title = models.CharField(max_length=128, verbose_name='标题')
     created_at = models.DateTimeField(verbose_name='版本创建时间')
 
+    class Meta:
+        unique_together = ['model', 'version']
+
 
 # ----- Nested versioned models -----
 
