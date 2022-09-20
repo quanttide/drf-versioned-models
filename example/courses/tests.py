@@ -1,11 +1,15 @@
-from django.urls import reverse
-
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 
 class CourseAPITestCase(APITestCase):
-    def test_list_course(self):
-        url = reverse('course-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    """
+    TODO: 固定手动集成测试。
+    """
+    fixtures = ['courses.json']
+
+    def test_list_courses(self):
+        pass
+
+    def test_curd_course(self):
+        pass
