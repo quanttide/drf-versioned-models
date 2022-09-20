@@ -5,7 +5,7 @@ Versioned models for Django REST Framework.
 ## Installation
 
 ```shell
-pip install drf-versioned-models -i 
+pip install drf-versioned-models
 ```
 
 ## Usage
