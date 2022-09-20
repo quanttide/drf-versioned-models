@@ -1,18 +1,15 @@
-from rest_framework.viewsets import ViewSet, ModelViewSet, ReadOnlyModelViewSet
-from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, DestroyModelMixin
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 
 class VersionedModelViewSet(ModelViewSet):
+    """
+    TODO: 优化异常处理和对应状态码
+    """
     pass
 
 
 class ReadOnlyVersionedModelViewSet(ReadOnlyModelViewSet):
-    pass
-
-
-class ModelVersionViewSet(ViewSet, ListModelMixin, CreateModelMixin, RetrieveModelMixin, DestroyModelMixin):
-    pass
-
-
-class ReadOnlyModelVersionViewSet(ReadOnlyModelViewSet):
+    """
+    TODO: 优化异常处理和对应状态码
+    """
     pass

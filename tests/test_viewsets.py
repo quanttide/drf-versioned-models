@@ -1,7 +1,8 @@
 from django.test import TestCase
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from rest_framework.test import APIRequestFactory
 
+from .models import ExampleModel
 from .views import ExampleModelViewSet
 
 
@@ -71,11 +72,12 @@ class VersionedModelViewSetTestCase(TestCase):
         self.assertEqual(response.data['name'], 'data-analytics-with-python')
         self.assertEqual(response.data['version'], '0.2.1')
         self.assertEqual(response.data['title'], "Python数据分析")
-        self.assertEqual(response.data['updated_at'], "2022-07-25T00:00:00")
+        self.assertEqual(response.data['updated_at'], "2022-07-26T00:00:00")
 
     def test_delete(self):
-        pass
+        request = self.factory.delete('/courses/')
+        example_detail_view = ExampleModelViewSet.as_view({'delete': 'destroy'})
+        response = example_detail_view(request, name='data-analytics-with-python')
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+        self.assertFalse(ExampleModel.objects.get(name='data-analytics-with-python').is_active)
 
-
-class ModelVersionViewSetTestCase(TestCase):
-    pass
