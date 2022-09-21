@@ -71,9 +71,18 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         return self.get_default_version_serializer_class()
 
     def _validate_duplicate_fields(self):
+        """
+        TODO:
+          - bugfix: 结合mapping表。
+          - 增加重复字段提示。
+        :return:
+        """
+        # 模型字段
         model_fields = self.get_fields().keys()
+        # 模型版本字段
         model_version_fields = self.version_serializer_class().get_fields().keys()
-        duplicated_fields = set(model_fields) & set(model_version_fields)
+        # 重复字段
+        duplicated_fields = set(model_fields) & set(model_version_fields) - set(self._version_field_mapping.keys())
         if duplicated_fields:
             raise serializers.ValidationError("未处理重复字段")
 

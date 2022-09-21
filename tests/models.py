@@ -12,6 +12,7 @@ from drf_versioned_models.models import VersionedModel, ModelVersion
 class ExampleModel(VersionedModel):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='ID')
     name = models.CharField(max_length=128, unique=True, verbose_name='名称')
+    created_at = models.DateTimeField(verbose_name='创建时间')
 
 
 class ExampleModelVersion(ModelVersion):

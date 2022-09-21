@@ -18,16 +18,19 @@ class VersionedModelSerializerTestCase(TestCase):
             'name': 'data-analytics-with-python',
             'version': '0.1.0',
             "title": "Python数据分析",
+            "created_at": "2022-05-23T00:00:00",
             "updated_at": '2022-05-23T00:00:00'
         }
         self.new_data = {
             'name': 'test-name',
+            "created_at": "2022-05-23T00:00:00",
             'title': '测试标题',
             'version': '0.1.0',
             'updated_at': '2022-05-24T00:00:00',
         }
         self.deserialized_data = OrderedDict({
             'name': 'test-name',
+            "created_at": datetime.fromisoformat("2022-05-23T00:00:00"),
             'versions': [
                 OrderedDict({
                     'version': '0.1.0',
@@ -38,6 +41,7 @@ class VersionedModelSerializerTestCase(TestCase):
         })
         self.new_version_data = {
             'name': 'data-analytics-with-python',
+            "created_at": "2022-05-23T00:00:00",
             'title': '测试标题2',
             'version': '0.2.0',
             'updated_at': "2022-05-25T00:00:00",

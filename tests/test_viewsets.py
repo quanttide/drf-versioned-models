@@ -31,6 +31,7 @@ class VersionedModelViewSetTestCase(TestCase):
     def test_create(self):
         data = {
           "name": "cloud-computing-with-python",
+          "created_at": "2022-05-23T00:00:00",
           "version": "0.1.0",
           "title": "Python云计算入门",
           "updated_at": "2022-06-25T00:00:00"
@@ -41,11 +42,13 @@ class VersionedModelViewSetTestCase(TestCase):
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertEqual(response.data['name'], 'cloud-computing-with-python')
         self.assertEqual(response.data['version'], '0.1.0')
+        self.assertEqual(response.data['created_at'], "2022-05-23T00:00:00")
         self.assertEqual(response.data['updated_at'], "2022-06-25T00:00:00")
 
     def test_update(self):
         data = {
           "name": "data-analytics-with-python",
+          "created_at": "2022-05-23T00:00:00",
           "version": "0.2.0",
           "title": "Python数据分析",
           "updated_at": "2022-07-25T00:00:00"
@@ -57,6 +60,7 @@ class VersionedModelViewSetTestCase(TestCase):
         self.assertEqual(response.data['name'], 'data-analytics-with-python')
         self.assertEqual(response.data['version'], '0.2.0')
         self.assertEqual(response.data['title'], "Python数据分析")
+        self.assertEqual(response.data['created_at'], "2022-05-23T00:00:00")
         self.assertEqual(response.data['updated_at'], "2022-07-25T00:00:00")
 
     def test_partial_update(self):
@@ -72,6 +76,7 @@ class VersionedModelViewSetTestCase(TestCase):
         self.assertEqual(response.data['name'], 'data-analytics-with-python')
         self.assertEqual(response.data['version'], '0.2.1')
         self.assertEqual(response.data['title'], "Python数据分析")
+        self.assertEqual(response.data['created_at'], "2022-05-23T00:00:00")
         self.assertEqual(response.data['updated_at'], "2022-07-26T00:00:00")
 
     def test_delete(self):
