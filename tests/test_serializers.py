@@ -1,64 +1,22 @@
-from collections import OrderedDict
-from datetime import datetime
+import json
 
 from django.test import TestCase
 
-from tests.models import ExampleModel, ExampleModelVersion
-from tests.serializers import ExampleModelSerializer
+from tests.data import TestDataMixin
+from tests.models import ExampleModel, ExampleModelVersion, ExampleModelVersionRelatedField
+from tests.serializers import ExampleModelSerializer, ExampleModelWithTagSerializer
 
 
-class VersionedModelSerializerTestCase(TestCase):
+class VersionedModelSerializerTestCase(TestDataMixin, TestCase):
     serializer_class = ExampleModelSerializer
-    fixtures = ['examples.json']
-
-    def setUp(self):
-        self.instance = ExampleModel.objects.get(name='data-analytics-with-python')
-        self.serialized_data = {
-            'id': "61741d93-8db4-4845-83c9-7e625e445983",
-            'name': 'data-analytics-with-python',
-            'version': '0.1.0',
-            "title": "Python数据分析",
-            "created_at": "2022-05-23T00:00:00",
-            "updated_at": '2022-05-23T00:00:00'
-        }
-        self.new_data = {
-            'name': 'test-name',
-            "created_at": "2022-05-23T00:00:00",
-            'title': '测试标题',
-            'version': '0.1.0',
-            'updated_at': '2022-05-24T00:00:00',
-        }
-        self.deserialized_data = OrderedDict({
-            'name': 'test-name',
-            "created_at": datetime.fromisoformat("2022-05-23T00:00:00"),
-            'versions': [
-                OrderedDict({
-                    'version': '0.1.0',
-                    'title': '测试标题',
-                    'created_at': datetime.fromisoformat('2022-05-24T00:00:00')
-                })
-            ]
-        })
-        self.new_version_data = {
-            'name': 'data-analytics-with-python',
-            "created_at": "2022-05-23T00:00:00",
-            'title': '测试标题2',
-            'version': '0.2.0',
-            'updated_at': "2022-05-25T00:00:00",
-        }
-        self.new_version_partial_data = {
-            'name': 'data-analytics-with-python',
-            'version': '0.2.1',
-            'updated_at': "2022-05-26T00:00:00",
-        }
 
     def test_to_representation(self):
         data = self.serializer_class().to_representation(self.instance)
-        self.assertDictEqual(self.serialized_data, dict(data))
+        self.assertDictEqual(self.serialized_data, json.loads(json.dumps(data)))
 
     def test_serialization(self):
         serializer = self.serializer_class(self.instance)
-        self.assertDictEqual(self.serialized_data, dict(serializer.data))
+        self.assertDictEqual(self.serialized_data, json.loads(json.dumps(serializer.data)))
 
     def test_validate(self):
         serializer = self.serializer_class(self.instance, data=self.new_data)
@@ -66,7 +24,7 @@ class VersionedModelSerializerTestCase(TestCase):
 
     def test_to_interval_value(self):
         data = self.serializer_class().to_internal_value(self.new_data)
-        self.assertDictEqual(self.deserialized_data, data)
+        self.assertOrderedDictEqual(data, self.deserialized_data)
 
     def test_create(self):
         serializer = self.serializer_class(data=self.new_data)
@@ -87,3 +45,64 @@ class VersionedModelSerializerTestCase(TestCase):
         serializer.save()
         version_instance = ExampleModelVersion.objects.get(version=self.new_version_partial_data['version'])
         self.assertEqual(version_instance.title, 'Python数据分析')
+
+
+class CustomVersionSerializerTestCase(TestDataMixin, TestCase):
+    serializer_class = ExampleModelWithTagSerializer
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.serialized_data.update({'tags': ['python']})
+        cls.new_data.update({'tags': ['python']})
+        cls.new_version_data.update({'tags': ['python']})
+        cls.deserialized_data['versions'][0].update({'tags': ['python']})
+
+    def test_to_representation(self):
+        data = self.serializer_class().to_representation(self.instance)
+        self.assertDictEqual(self.serialized_data, json.loads(json.dumps(data)))
+
+    def test_serialization(self):
+        serializer = self.serializer_class(self.instance)
+        self.assertDictEqual(self.serialized_data, json.loads(json.dumps(serializer.data)))
+
+    def test_to_interval_value(self):
+        data = self.serializer_class().to_internal_value(self.new_data)
+        self.assertOrderedDictEqual(data, self.deserialized_data)
+
+    def test_create_version(self):
+        """
+        TODO: 待补充测试
+        :return: 
+        """
+        pass
+
+    def test_create(self):
+        serializer = self.serializer_class(data=self.new_data)
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+        serializer.save()
+        model = ExampleModel.objects.get(name=self.new_data['name'])
+        self.assertTrue(model)
+        model_version = ExampleModelVersion.objects.get(model=model, version=self.new_data['version'])
+        self.assertTrue(model_version)
+        self.assertTrue(ExampleModelVersionRelatedField.objects.filter(model_version=model_version).exists())
+
+    def test_update(self):
+        serializer = self.serializer_class(self.instance, data=self.new_version_data)
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+        serializer.save()
+        model = ExampleModel.objects.get(name=self.new_version_data['name'])
+        self.assertTrue(model)
+        model_version = ExampleModelVersion.objects.get(model=model, version=self.new_version_data['version'])
+        self.assertTrue(model_version)
+        self.assertTrue(ExampleModelVersionRelatedField.objects.filter(model_version=model_version).exists())
+
+    def test_partial_update(self):
+        serializer = self.serializer_class(self.instance, data=self.new_version_partial_data, partial=True)
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+        serializer.save()
+        model = ExampleModel.objects.get(name=self.new_version_partial_data['name'])
+        self.assertTrue(model)
+        model_version = ExampleModelVersion.objects.get(model=model, version=self.new_version_partial_data['version'])
+        self.assertTrue(model_version)
+        self.assertTrue(ExampleModelVersionRelatedField.objects.filter(model_version=model_version).exists())

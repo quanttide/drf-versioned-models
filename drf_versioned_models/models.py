@@ -74,14 +74,6 @@ class VersionedModel(models.Model):
     class Meta:
         abstract = True
 
-    class VersionMeta:
-        # 版本模型的关联名称
-        version_related_name = 'versions'
-        # TODO: 预留着，后面再用起来
-        version_related_names = ('versions',)
-
-    # objects = VersionedModelManager()
-
     def __init__(self, *args, **kwargs):
         # TODO: 验证必填Meta
         super(VersionedModel, self).__init__(*args, **kwargs)

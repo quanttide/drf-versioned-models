@@ -26,6 +26,12 @@ class ExampleModelVersion(ModelVersion):
         unique_together = ['model', 'version']
 
 
+class ExampleModelVersionRelatedField(models.Model):
+    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4, verbose_name='标签ID')
+    model_version = models.ForeignKey(ExampleModelVersion, related_name='tags', on_delete=models.CASCADE, verbose_name='版本模型')
+    tag = models.CharField(max_length=16, verbose_name='标签')
+
+
 # ----- Nested versioned models -----
 
 class ParentModel(models.Model):

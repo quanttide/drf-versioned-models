@@ -27,32 +27,43 @@ class VersionedModelSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # -- 常用Meta设置 --
-        self._model_class = self.Meta.model
-        self._model_class_name = self._model_class.__name__
-        # -- 版本相关Meta设置 --
-        # 版本模型类
-        self._version_model_class = self.Meta.version_model
-        # 版本序列化字段
-        self._version_model_fields_exclude = getattr(self.Meta, 'version_model_fields_exclude', ['id', 'is_active'])
-        # 版本标记字段，默认为`version`
-        self._version_field = getattr(self.Meta, 'version_field', 'version')
-        # 版本关联字段，默认为`versions`
-        self._version_related_name = getattr(self.Meta, 'version_related_name', 'versions')
-        # 序列化行为版本字段匹配表，默认为空
-        self._version_field_mapping = self._validate_version_field_mapping(getattr(self.Meta, 'version_field_mapping', {}))
-        # 反序列行为版本字段匹配表，默认为空
-        self._version_field_mapping_reverse = {value: key for key, value in getattr(self.Meta, 'version_field_mapping', {}).items()}
-        # -- 验证 --
+        # 版本相关Meta设置
+        self._init_version_meta()
+        # 验证
         # 版本字段冲突抛出异常，让开发者自己处理
         self._validate_duplicate_fields()
         # partial_update定义为上个版本基础上update字段以后更新
         if self.partial:
             self.initial_data = self._get_partial_update_initial_data(self.initial_data)
 
+    def _init_version_meta(self):
+        # 常用Meta设置
+        self._model_class = self.Meta.model
+        self._model_class_name = self._model_class.__name__
+        # 版本序列化类
+        self._version_serializer_class = getattr(self.Meta, 'version_serializer', None)
+        # 版本模型类
+        self._version_model_class = getattr(self.Meta, 'version_model', None) or self._version_serializer_class.Meta.model
+        # 版本序列化字段
+        # TODO: 给版本序列化类时需要修改
+        self._version_model_fields_exclude = getattr(self.Meta, 'version_model_fields_exclude', ['id', 'is_active'])
+        # 版本标记字段，默认为`version`
+        self._version_field = getattr(self.Meta, 'version_field', 'version')
+        # 版本关联字段，默认为`versions`
+        self._version_related_name = getattr(self.Meta, 'version_related_name', 'versions')
+        # 版本外键字段
+        self._version_foreign_key_field_name = getattr(self._model_class, self._version_related_name).field.name
+        # 序列化行为版本字段匹配表，默认为空
+        self._version_field_mapping = self._validate_version_field_mapping(getattr(self.Meta, 'version_field_mapping', {}))
+        # 反序列行为版本字段匹配表，默认为空
+        self._version_field_mapping_reverse = {value: key for key, value in getattr(self.Meta, 'version_field_mapping', {}).items()}
+
     def _validate_version_field_mapping(self, version_field_mapping):
         """
-        TODO: 待转字段必须存在
+        TODO:
+          - 待转字段必须存在
+          - key和value不能一样，否则没意义，还影响后面的验证逻辑。
+
         :param version_field_mapping:
         :return:
         """
@@ -68,7 +79,7 @@ class VersionedModelSerializer(serializers.ModelSerializer):
 
     @property
     def version_serializer_class(self):
-        return self.get_default_version_serializer_class()
+        return self._version_serializer_class or self.get_default_version_serializer_class()
 
     def _validate_duplicate_fields(self):
         """
@@ -136,12 +147,19 @@ class VersionedModelSerializer(serializers.ModelSerializer):
                     version_data[key] = data[key]
         return version_data
 
+    def create_version(self, instance, version_validated_data):
+        version_validated_data.update({self._version_foreign_key_field_name: instance})
+        serializer = self.version_serializer_class(data=version_validated_data)
+        if serializer.is_valid(raise_exception=True):
+            version_instance = serializer.create(version_validated_data)
+            return version_instance
+
     def create(self, validated_data):
         version_validated_data = validated_data.pop(self._version_related_name)[0]
         # 创建新模型
         instance = self._model_class.objects.create(**validated_data)
         # 创建新模型版本
-        getattr(instance, self._version_related_name).create(**version_validated_data)
+        self.create_version(instance, version_validated_data)
         return instance
 
     def update(self, instance, validated_data):
@@ -156,5 +174,5 @@ class VersionedModelSerializer(serializers.ModelSerializer):
         """
         # 创建新模型版本
         version_validated_data = validated_data.pop(self._version_related_name)[0]
-        getattr(instance, self._version_related_name).create(**version_validated_data)
+        self.create_version(instance, version_validated_data)
         return instance
