@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 # name it as your package name
 name = "drf-versioned-models"
 # semetric versions
-version = "0.1.0-beta.4"
+version = "0.1.0"
 # describe the package within one sentence
 description = "Versioned models support for Django REST Framework"
 authors = [

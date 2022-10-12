@@ -90,12 +90,9 @@ class ExampleModelSerializer(VersionedModelSerializer):
 
 ## 定义视图类
 
-```python
+依照官方实现即可。
 
-```
 
 ## 定义路由类
 
-```python
-
-```
+依照官方实现即可。
