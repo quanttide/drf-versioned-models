@@ -1,4 +1,4 @@
-# `drf-versioned-models`
+# `drf-versioned-schemas`
 
 Versioned models for Django REST Framework.
 
