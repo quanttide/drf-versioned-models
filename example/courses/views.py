@@ -2,7 +2,7 @@
 
 """
 
-from drf_versioned_models.viewsets import VersionedModelViewSet
+from drf_versioned_schemas.viewsets import VersionedModelViewSet
 
 from .models import Course
 from .serializers import CourseSerializer

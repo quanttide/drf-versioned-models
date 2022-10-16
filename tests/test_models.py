@@ -2,7 +2,7 @@ import unittest
 
 from django.test import TestCase
 
-from drf_versioned_models.models import VersionedModel, ModelVersion
+from drf_versioned_schemas.models import VersionedModel, ModelVersion
 from .models import ExampleModel, ExampleModelVersion
 
 

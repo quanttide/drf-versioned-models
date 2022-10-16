@@ -4,7 +4,7 @@
 import uuid
 
 from django.db import models
-from drf_versioned_models.models import VersionedModel, ModelVersion
+from drf_versioned_schemas.models import VersionedModel, ModelVersion
 
 
 # ----- Versioned models -----

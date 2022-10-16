@@ -37,7 +37,7 @@
 # models.py
 import uuid
 from django.db import models
-from drf_versioned_models.models import VersionedModel, ModelVersion
+from drf_versioned_schemas.models import VersionedModel, ModelVersion
 
 
 class ExampleModel(VersionedModel):
@@ -65,7 +65,7 @@ class ExampleModelVersion(ModelVersion):
 ```python
 # serializers.py
 from rest_framework import serializers
-from drf_versioned_models.serializers import VersionedModelSerializer
+from drf_versioned_schemas.serializers import VersionedModelSerializer
 
 from .models import *
 

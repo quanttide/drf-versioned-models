@@ -1,7 +1,7 @@
 from django.urls import path, include
 
 from rest_framework_nested.routers import SimpleRouter
-from drf_versioned_models.routers import ModelVersionSimpleRouter
+from drf_versioned_schemas.routers import ModelVersionSimpleRouter
 
 from .views import ExampleModelViewSet
 

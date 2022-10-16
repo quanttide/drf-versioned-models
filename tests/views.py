@@ -1,4 +1,4 @@
-from drf_versioned_models.viewsets import VersionedModelViewSet
+from drf_versioned_schemas.viewsets import VersionedModelViewSet
 
 from .models import ExampleModel
 from .serializers import ExampleModelSerializer

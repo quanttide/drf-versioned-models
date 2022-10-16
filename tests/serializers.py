@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from drf_versioned_models.serializers import VersionedModelSerializer
+from drf_versioned_schemas.serializers import VersionedModelSerializer
 
 from .models import *
 
