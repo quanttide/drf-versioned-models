@@ -10,6 +10,10 @@ pip install drf-versioned-schemas
 
 ## Usage
 
+遵循[量潮RESTful API规范](https://github.com/quanttide/quanttide-restful-api-specification)
+的[版本管理的领域模型](https://github.com/quanttide/quanttide-restful-api-specification/tree/master/versioned_schemas)
+的领域模型和API。
+
 ### 定义模型类
 
 把计划版本管理的模型分为不可变部分和可变部分，其中：
