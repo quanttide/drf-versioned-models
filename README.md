@@ -1,6 +1,6 @@
 # `drf-versioned-schemas`
 
-Versioned models for Django REST Framework.
+Versioned schemas for Django REST Framework.
 
 ## Installation
 
